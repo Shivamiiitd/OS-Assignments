@@ -1,0 +1,37 @@
+In the 1st part of the question in which we have to use the fork() system call,I have
+defined two functions, cont and cal_average. cont takes two integers as parameter and 
+concatenate them and returns an integer. For example cont(4,3) will give integer value
+43 as return. cal_average takes a character section as parameter,i.e. it will take ‘A’
+or ‘B’ as parameter and then it will print the average scores of each assignment for 
+that section. In the cal_average function itself it will read the student records file
+with open and read system calls. While using open(), it returns an integer. If that 
+integer is less than 0, then there is a error. In cal_average function, for loops run 
+from 98 because from 98th character, in the student records file, there is 1st student id 
+starting and for loop is till 814, because total number of characters in the records file 
+are 814. Then in the main() function, fork() is being called and it will create two 
+processes and returns an integer value. If fork() returns 0, then it will be a child process, 
+if it returns a negative value then it is a Error and if it calls a positive value (not 0), 
+then it will be the parent process. I have used waitpid() for child process to get complete 
+first. Now exit() is called to exit the program. 
+
+In the second part, i.e. of threads, both cont and cal_average functions are same as above.
+Only in cal_average function an integer array is also given as parameter in which I am storing 
+sum of marks of each assignment for both sections. Also I have created a pointer function which 
+will take a pointer as parameter and in this I have called cal_average function for section A. 
+In main() function, a thread_id is created and a thread is being created, in which this pointer 
+function is used and the integer arr is given as the pointer to the pointer function. Now 
+pthread_join is being called for threads which is equivalent to the waitpid() as described above. 
+It will block the other threads, until the thread just created above is not being completed. After 
+this, for section B cal_average function is called. And then by exit() command, program is finished.
+
+For Executing the code:
+
+For Q1 fork():
+       make Q1_a_exe 
+       ./Q1_a_exe
+
+For Q1 threads:
+       make Q1_b_exe 
+       ./Q1_b_exe
+(Makefile is attached)
+
