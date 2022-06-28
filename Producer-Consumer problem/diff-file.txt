@@ -1,0 +1,68 @@
+﻿diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
+index f6b5779..449e893 100644
+--- a/arch/x86/entry/syscalls/syscall_64.tbl
++++ b/arch/x86/entry/syscalls/syscall_64.tbl
+@@ -369,6 +369,8 @@
+ 445    common  landlock_add_rule       sys_landlock_add_rule
+ 446    common  landlock_restrict_self  sys_landlock_restrict_self
+ 447    common  memfd_secret            sys_memfd_secret
++448 common  reader              sys_reader
++449 common  writer              sys_writer
+ 
+ #
+ # Due to a historical design error, certain syscalls are numbered differently
+diff --git a/kernel/sys.c b/kernel/sys.c
+index ef1a78f..c302f85 100644
+--- a/kernel/sys.c
++++ b/kernel/sys.c
+@@ -636,6 +636,56 @@ SYSCALL_DEFINE1(setuid, uid_t, uid)
+        return __sys_setuid(uid);
+ }
+ 
++DECLARE_RWSEM(semap);
++int capacity = 25;
++int size = 0;
++char* arr = NULL;
++void enqueue(char c){
++    arr[size] = c;
++    size++;
++}
++char dequeue(void){
++    char d = arr[0];
++    int i = 0;
++    while(i < size - 1){
++        arr[i] = arr[i+1];
++        i++;
++    }
++    size--;
++    return d;
++}
++ 
++SYSCALL_DEFINE1(writer, char *, data)
++    kerdata = (char*)kmalloc(8, GFP_KERNEL);
++    __copy_from_user(kerdata, data, 8);
++    down_write(&semap);
++    for(i = 0; i < 8; i++){
++        enqueue(kerdata[i]);
++    }
++    up_write(&semap);
++    return 0;
++}
++ 
++SYSCALL_DEFINE1(reader, char *, data)
++{
++    int i;
++    char *kerdata;
++    kerdata = (char*)kmalloc(8, GFP_KERNEL);
++    down_read(&semap);
++    for(i = 0; i < 8; i++){
++        char m = dequeue();
++        kerdata[i] = m;
++    }
++    up_read(&semap);
++    __copy_to_user(data, kerdata, 8);
++    return 0;
++}
+ 
+ /*
+  * This function implements a generic ability to update ruid, euid,
